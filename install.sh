@@ -8,10 +8,25 @@ SHACK_DIR="$HOME/shack"
 SERVICE_DIR="$HOME/.config/systemd/user"
 AUTOSTART_DIR="$HOME/.config/autostart"
 
-echo "╔══════════════════════════════════╗"
-echo "║   ShackDash Installer            ║"
-echo "╚══════════════════════════════════╝"
+echo "╔══════════════════════════════════════╗"
+echo "║   ShackDash Installer                ║"
+echo "╚══════════════════════════════════════╝"
 echo ""
+
+# Must not run as root
+if [ "$EUID" -eq 0 ]; then
+    echo "❌ Do not run this script as root or with sudo."
+    echo "   Run as your normal user: bash install.sh"
+    exit 1
+fi
+
+# Check DBus session is available for systemd --user
+if [ -z "$DBUS_SESSION_BUS_ADDRESS" ] && [ -z "$XDG_RUNTIME_DIR" ]; then
+    echo "❌ No user session bus detected."
+    echo "   Please run this script from a desktop terminal, not an SSH session."
+    echo "   If using SSH, try: export XDG_RUNTIME_DIR=/run/user/\$(id -u)"
+    exit 1
+fi
 
 # Check OS
 if ! command -v apt-get &> /dev/null; then
@@ -24,7 +39,6 @@ echo "→ Installing dependencies..."
 sudo apt-get install -y \
     python3 \
     python3-gi \
-    python3-gi-cairo \
     gir1.2-gtk-3.0 \
     gir1.2-webkit2-4.1 \
     gir1.2-appindicator3-0.1 \
@@ -32,11 +46,9 @@ sudo apt-get install -y \
 sudo apt-get install -y \
     python3 \
     python3-gi \
-    python3-gi-cairo \
     gir1.2-gtk-3.0 \
     gir1.2-webkit2-4.0 \
     gir1.2-appindicator3-0.1
-
 echo "✓ Dependencies installed"
 
 # Create shack directory
@@ -60,7 +72,6 @@ if [ ! -f "$SHACK_DIR/shack.json" ]; then
 else
     echo "✓ Existing shack.json preserved"
 fi
-
 echo "✓ Files copied to $SHACK_DIR"
 
 # Install systemd service
@@ -93,12 +104,12 @@ DESKTOP
 echo "✓ Autostart entry created"
 
 echo ""
-echo "╔══════════════════════════════════╗"
-echo "║   Installation complete! 🎙️      ║"
-echo "╚══════════════════════════════════╝"
+echo "╔══════════════════════════════════════╗"
+echo "║   Installation complete! 🎙️          ║"
+echo "╚══════════════════════════════════════╝"
 echo ""
 echo "Run ShackDash now with:"
 echo "  python3 ~/shack/shackdash.py"
 echo ""
-echo "On first launch, the Setup Wizard will guide you through"
-echo "entering your callsign and location details."
+echo "On first launch, the Setup Wizard will guide you"
+echo "through entering your callsign and location details."
