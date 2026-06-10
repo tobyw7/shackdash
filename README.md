@@ -4,7 +4,9 @@ A lightweight amateur radio station desktop widget for Ubuntu/Linux.
 
 Displays real-time solar propagation data, HF/VHF band conditions, station info, and live SOTA/POTA spots — all in a compact, collapsible sidebar widget.
 
-![ShackDash Widget](screenshots/shackdash_dark.png)
+![ShackDash Widget Loading](screenshots/Loading-Screen.png)
+![ShackDash Dark Mode](screenshots/ShackDash-Loaded-dark.png)
+![ShackDash Light Mode](screenshots/ShackDash-Loaded-light.png)
 
 ---
 
