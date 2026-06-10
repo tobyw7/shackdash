@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>ShackDash</title>
+<meta charset="UTF-8">
+<title>ShackDash</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  /* Dark theme (default) */
+  :root {
+    --bg-base:      #0e1117;
+    --bg-widget:    #141922;
+    --bg-card:      #0e1822;
+    --border:       #1e2a3a;
+    --border-card:  #1e2e40;
+    --text-primary: #e0e6f0;
+    --text-value:   #c0d8f0;
+    --text-label:   #6a8aaa;
+    --text-meta:    #a0b8d0;
+    --text-dim:     #4a6a8a;
+    --text-link:    #7ab8f5;
+    --text-sub:     #3a5a7a;
+    --header-from:  #0d2240;
+    --header-to:    #1a3a5c;
+    --header-border:#1e3a5a;
+    --header-text:  #5a8ab0;
+    --divider:      #1a2535;
+    --gc-val:       #7ab8f5;
+    --gc-sub:       #3a5a7a;
+    --coord-val:    #7ab8f5;
+    --coord-sub:    #3a5a7a;
+    --sc-val:       #7ab8f5;
+    --sc-sub:       #5a7a9a;
+    --status-ok:    #3dba5a;
+    --status-err:   #ba3d3d;
+    --pill-good-bg:   #0d3020; --pill-good-fg:   #4de090; --pill-good-bd:   #1a5030;
+    --pill-fair-bg:   #2a2200; --pill-fair-fg:   #f0c040; --pill-fair-bd:   #4a3a00;
+    --pill-poor-bg:   #2a0d0d; --pill-poor-fg:   #e05050; --pill-poor-bd:   #5a1a1a;
+    --pill-closed-bg: #1a1a2a; --pill-closed-fg: #4a4a6a; --pill-closed-bd: #2a2a3a;
+  }
+
+  /* Header always uses light text since background is always dark blue */
+  .header .callsign,
+  .header #h-callsign { color: #c8e4ff !important; }
+  .header .name       { color: #a0c8e8 !important; }
+  .header #h-qth      { color: #a0c8e8 !important; }
+  .header #h-zones    { color: #c8e4ff !important; }
+  .header-right .name { color: #c8e4ff !important; }
+  .header-right *     { color: #a0c8e8 !important; }
+
+  /* Light theme — cool blue-grey, easy on the eyes */
+  body.light {
+    --bg-base:      #e8ecf0;
+    --bg-widget:    #dde3ea;
+    --bg-card:      #cdd5de;
+    --border:       #b0bec8;
+    --border-card:  #a8b8c8;
+    --text-primary: #1e2d3d;
+    --text-value:   #1e2d3d;
+    --text-label:   #3a5570;
+    --text-meta:    #2a4560;
+    --text-dim:     #5a7890;
+    --text-link:    #1a4f8a;
+    --text-sub:     #4a6a8a;
+    --header-from:  #1e3a58;
+    --header-to:    #2a5070;
+    --header-border:#1e3a58;
+    --header-text:  #a0c0e0;
+    --divider:      #b0bec8;
+    --gc-val:       #1a4f8a;
+    --gc-sub:       #4a6a8a;
+    --coord-val:    #1a4f8a;
+    --coord-sub:    #4a6a8a;
+    --sc-val:       #1a4f8a;
+    --sc-sub:       #4a6a8a;
+    --status-ok:    #2a8a4a;
+    --status-err:   #8a2a2a;
+    --statusbar-bg: transparent;
+    --pill-good-bg:   #c8f0d8; --pill-good-fg:   #1a6030; --pill-good-bd:   #80c8a0;
+    --pill-fair-bg:   #f0e8c0; --pill-fair-fg:   #6a4800; --pill-fair-bd:   #c8a840;
+    --pill-poor-bg:   #f0c8c8; --pill-poor-fg:   #6a1010; --pill-poor-bd:   #c86060;
+    --pill-closed-bg: #d8dde3; --pill-closed-fg: #5a6a7a; --pill-closed-bd: #a8b8c8;
+  }
+  body {
+    font-family: 'Segoe UI', 'Liberation Sans', Ubuntu, sans-serif;
+    background: var(--bg-base);
+    color: var(--text-primary);
+    width: 360px;
+    font-size: 12px;
+    user-select: none;
+    overflow-x: hidden;
+    overflow-y: hidden;
+  }
+  /* SOTA/POTA spots panel */
+  #panel-spots .sec-body { padding: 0 12px 4px; }
+  .spot-row    { display:flex; align-items:center; gap:6px;
+                 padding: 3px 0; border-bottom: 1px solid var(--border); font-size:10px; }
+  .spot-row:last-child { border-bottom: none; }
+  .spot-type   { font-size:8px; font-weight:700; padding:1px 4px; border-radius:3px;
+                 min-width:34px; text-align:center; flex-shrink:0; }
+  .spot-sota   { background:#2a2200; color:#f0c040; border:1px solid #4a3a00; }
+  .spot-pota   { background:#0d3020; color:#4de090; border:1px solid #1a5030; }
+  .spot-call   { color:var(--text-value); font-weight:600; min-width:62px; flex-shrink:0; }
+  .spot-ref    { color:var(--text-label); font-size:9px; flex:0 0 55px; overflow:hidden;
+                 cursor:pointer; white-space:nowrap; }
+  .spot-freq   { color:var(--text-meta); font-size:9px; flex:1; text-align:right; white-space:nowrap; }
+  .spot-mode   { color:var(--text-dim); font-size:9px; flex:0 0 28px; text-align:right; }
+  .spots-empty { color:var(--text-dim); font-size:10px; text-align:center; padding:8px 0; }
+  .setup-prompt {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 8px; padding: 20px 16px; text-align: center;
+  }
+  .setup-prompt p { color: var(--text-dim); font-size: 10px; margin: 0; }
+  .setup-btn {
+    background: var(--text-link); color: #fff;
+    border: none; border-radius: 5px;
+    padding: 6px 16px; font-size: 11px; font-weight: 600;
+    cursor: pointer; margin-top: 4px;
+  }
+  .setup-btn:hover { opacity: 0.85; }
+  .empty-section { color: var(--text-dim); font-size: 10px; text-align: center; padding: 8px 12px; display: none; }
+  .empty-section a { color: var(--text-link); cursor: pointer; text-decoration: none; }
+  .empty-section a:hover { text-decoration: underline; }
+  .spot-header-row { display:flex; align-items:center; gap:6px;
+    padding: 2px 0 4px; border-bottom: 1px solid var(--border); margin-bottom:2px; }
+    gap:0 6px; padding: 2px 0 4px; border-bottom: 1px solid var(--border); margin-bottom:2px; }
+  .spot-header-row { display:flex; align-items:center; gap:4px;
+    padding: 2px 0 4px; border-bottom: 1px solid var(--border); margin-bottom:2px; }
+    padding: 2px 0 4px; border-bottom: 1px solid var(--border); margin-bottom:2px; }
+
+  /* Loading overlay */
+
+
+
+  /* Custom tooltips (WebKit doesn't show title= natively) */
+  [data-tip] { cursor: pointer; }
+  #js-tooltip {
+    position: fixed; background: #1e2d3d; color: #e0e6f0;
+    font-size: 9px; padding: 3px 7px; border-radius: 4px;
+    white-space: nowrap; pointer-events: none;
+    z-index: 99999; display: none;
+  }
+
+  /* Scrollbar styling to match dark theme */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg-base); }
+  ::-webkit-scrollbar-thumb { background: #2a4a6a; border-radius: 2px; }
+  ::-webkit-scrollbar-thumb:hover { background: #3a6a9a; }
+  .widget { background: var(--bg-widget); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; position: relative; padding-bottom: 1px; }
+  .widget.loading { visibility: visible; }
+  #splash {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    height: 260px; gap: 12px;
+    background: var(--bg-widget); border-radius: 10px;
+  }
+  #splash.hidden { display: none; }
+  .splash-callsign { font-size: 24px; font-weight: 700; color: var(--text-link); letter-spacing: 2px; }
+  .splash-sub      { font-size: 11px; color: var(--text-label); }
+  #widget-content  { display: none; text-align: left; }
+  #widget-content.visible { display: block; text-align: left; }
+  .header {
+    background: linear-gradient(135deg, var(--header-from) 0%, var(--header-to) 100%);
+    padding: 10px 14px 9px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 1px solid var(--header-border);
+  }
+  .callsign { font-family: 'Courier New', monospace; font-size: 22px; font-weight: 700; color: var(--text-link); letter-spacing: 0.05em; line-height: 1; }
+  .header-right { text-align: right; }
+  .header-right .name { font-size: 11px; color: var(--text-meta); line-height: 1.5; }
+  .header-right .lic  { font-family: 'Courier New', monospace; font-size: 10px; color: var(--header-text); }
+
+  /* Status flash */
+  #status-flash {
+    display: none; padding: 5px 12px; font-size: 10px; font-weight: 500;
+    text-align: center; transition: opacity 0.4s;
+    position: absolute; left: 0; right: 0; z-index: 100;
+    pointer-events: none;
+  }
+  #status-flash.ok      { background: #0d3020; color: #4de090; }
+  #status-flash.pending { background: #1a2200; color: #f0c040; }
+  #status-flash.err     { background: #2a0d0d; color: #e05050; }
+
+  /* Panels */
+  .panel { display: block; }
+  .panel.hidden { display: none; }
+  .panel-divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+  /* Collapsible section headers */
+  .sec-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 12px 4px;
+    cursor: pointer;
+  }
+  .sec-header:hover { background: var(--divider); }
+  .sec-title {
+    font-size: 9px; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--text-dim);
+  }
+  .sec-arrow {
+    font-size: 9px; color: var(--text-sub); transition: transform 0.2s;
+    line-height: 1;
+  }
+  .sec-arrow.collapsed { transform: rotate(-90deg); }
+  .sec-body { overflow: hidden; }
+  .sec-body.collapsed { display: none; }
+
+  /* Non-collapsible title (propagation) */
+  .sec-title-plain {
+    font-size: 9px; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--text-dim); padding: 7px 12px 3px;
+    text-align: left;
+  }
+
+  /* Rows */
+  .info-row { display: flex; justify-content: space-between; align-items: baseline; padding: 3px 12px; border-bottom: 1px solid var(--divider); }
+  .info-row:last-child { border-bottom: none; }
+  .info-label { color: var(--text-label); font-size: 10px; }
+  .info-val   { font-family: 'Courier New', monospace; font-size: 10px; color: var(--text-value); font-weight: 600; }
+
+  /* Grid cards */
+  .grid-block { padding: 0 10px 7px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; }
+  .grid-card  { background: var(--bg-card); border: 1px solid var(--border-card); border-radius: 6px; padding: 5px 7px; }
+  .gc-label   { font-size: 7.5px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; line-height: 1.3; }
+  .gc-val     { font-family: 'Courier New', monospace; font-size: 11px; font-weight: 700; color: var(--text-link); line-height: 1.4; }
+  .gc-sub     { font-size: 7px; color: var(--text-sub); line-height: 1.3; margin-top: 1px; }
+  .coord-row  { margin: 0 10px 7px; background: var(--bg-card); border: 1px solid var(--border-card); border-radius: 6px; padding: 5px 8px; display: flex; justify-content: space-between; align-items: center; }
+  .coord-val  { font-family: 'Courier New', monospace; font-size: 10px; color: var(--text-link); font-weight: 600; }
+  .coord-sub  { font-size: 8px; color: var(--text-sub); }
+  .divider    { height: 1px; background: var(--divider); margin: 0 12px; }
+
+  /* Solar */
+  .solar-row  { display: flex; gap: 4px; padding: 4px 10px; }
+  .solar-card { background: var(--bg-card); border: 1px solid var(--border-card); border-radius: 6px; padding: 4px 6px; flex: 1; text-align: center; }
+  .sc-label   { font-size: 7.5px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; }
+  .sc-val     { font-family: 'Courier New', monospace; font-size: 12px; font-weight: 700; color: var(--text-link); line-height: 1.4; }
+  .sc-sub     { font-size: 7px; color: var(--sc-sub); }
+
+  /* Band conditions */
+  .bands-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; padding: 3px 10px 5px; justify-items: stretch; }
+  .band-row   { background: var(--bg-card); border: 1px solid var(--border-card); border-radius: 5px; padding: 3px 7px; display: flex; justify-content: space-between; align-items: center; width: 100%; box-sizing: border-box; }
+  .band-name  { font-size: 10px; color: var(--text-label); }
+  .band-pill  { font-size: 8px; padding: 1px 4px; border-radius: 3px; font-weight: 600; }
+  .cond-good    { background: var(--pill-good-bg);   color: var(--pill-good-fg);   border: 1px solid var(--pill-good-bd); }
+  .cond-fair    { background: var(--pill-fair-bg);   color: var(--pill-fair-fg);   border: 1px solid var(--pill-fair-bd); }
+  .cond-poor    { background: var(--pill-poor-bg);   color: var(--pill-poor-fg);   border: 1px solid var(--pill-poor-bd); }
+  .cond-closed  { background: var(--pill-closed-bg); color: var(--pill-closed-fg); border: 1px solid var(--pill-closed-bd); }
+  .cond-unknown { background: var(--pill-closed-bg); color: var(--pill-closed-fg); border: 1px solid var(--pill-closed-bd); }
+
+  /* VHF */
+  .vhf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; padding: 3px 10px 5px; justify-items: stretch; }
+  .vhf-card { background: var(--bg-card); border: 1px solid var(--border-card); border-radius: 5px; padding: 4px 7px; display: flex; justify-content: space-between; align-items: center;  width: 100%; box-sizing: border-box; }
+  .vhf-label { font-size: 10px; color: var(--text-label); }
+  .vhf-val   { font-size: 8px; padding: 1px 5px; border-radius: 3px; font-weight: 600; }
+
+  .extra-row { padding: 2px 10px 4px; display: flex; gap: 8px; font-size: 9px; flex-wrap: wrap; }
+  .extra-item { color: var(--text-dim); }
+  .extra-item b { color: var(--text-meta); }
+
+  /* Status bar */
+  .statusbar  { display: flex; justify-content: space-between; padding: 4px 12px 6px; border-top: 1px solid var(--divider); font-size: 8px; color: var(--text-sub); }
+  .status-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #2a4a2a; margin-right: 4px; vertical-align: middle; }
+  .status-dot.ok  { background: #3dba5a; }
+  .status-dot.err { background: #ba3d3d; }
+  .loading    { text-align: center; padding: 16px; color: var(--text-sub); font-size: 11px; }
+  .error-msg  { padding: 10px 12px; color: #8a5a3a; font-size: 10px; line-height: 1.6; }
+  .error-msg code { background: #1a1a2a; padding: 1px 4px; border-radius: 3px; font-size: 9px; color: var(--text-meta); }
+</style>
+</head>
+<body>
+  <div id="js-tooltip"></div>
+  <div class="widget loading" id="main-widget">
+  <div id="splash">
+    <svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="32" cy="32" r="32" fill="#0e1822"/>
+      <circle cx="32" cy="36" r="22" fill="#0d2040" stroke="#4a9de0" stroke-width="1.5"/>
+      <ellipse cx="32" cy="36" rx="22" ry="7" fill="none" stroke="#1e3a5a" stroke-width="1"/>
+      <ellipse cx="32" cy="28" rx="19" ry="4" fill="none" stroke="#1e3a5a" stroke-width="0.8"/>
+      <ellipse cx="32" cy="44" rx="19" ry="4" fill="none" stroke="#1e3a5a" stroke-width="0.8"/>
+      <line x1="32" y1="14" x2="32" y2="58" stroke="#1e3a5a" stroke-width="0.8"/>
+      <path d="M13 39 Q32 10 51 39" fill="none" stroke="#f0c040" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="13" cy="39" r="3" fill="#f0c040"/>
+      <circle cx="51" cy="39" r="3" fill="#4de090"/>
+    </svg>
+    <div class="splash-callsign" id="splash-callsign">ShackDash</div>
+    <div class="splash-sub">Loading…</div>
+  </div>
+  <div id="widget-content">
+    <div id="setup-prompt" class="setup-prompt" style="display:none;">
+      <svg width="40" height="40" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" opacity="0.5">
+        <circle cx="32" cy="32" r="32" fill="#0e1822"/>
+        <circle cx="32" cy="36" r="22" fill="#0d2040" stroke="#4a9de0" stroke-width="1.5"/>
+        <path d="M13 39 Q32 10 51 39" fill="none" stroke="#f0c040" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="13" cy="39" r="3" fill="#f0c040"/>
+        <circle cx="51" cy="39" r="3" fill="#4de090"/>
+      </svg>
+      <p>Welcome to ShackDash!</p>
+      <p>Set up your station details to get started.</p>
+      <button class="setup-btn" onclick="document.title='open-wizard:'+Date.now()">
+        Run Setup Wizard
+      </button>
+    </div>
+
+  <div class="header">
+    <div>
+      <div class="callsign" id="h-callsign">ShackDash</div>
+      <div style="font-size:10px;color:var(--header-text);margin-top:2px;" id="h-qth">Toby · Norfolk · England</div>
+    </div>
+    <div class="header-right">
+      <div class="name" id="h-zones">CQ Zone 14 · ITU Zone 28</div>
+
+    </div>
+  </div>
+
+  <div id="status-flash"></div>
+
+  <div id="panels-wrap">
+  <!-- LOCATION PANEL -->
+  <div class="panel" id="panel-loc">
+
+    <!-- Location & Grid — collapsible -->
+    <div class="sec-header" data-section="s-loc">
+      <span class="sec-title">Location &amp; Grid</span>
+      <span class="sec-arrow" id="arrow-s-loc">▼</span>
+    </div>
+    <div class="sec-body" id="body-s-loc">
+      <div class="grid-block">
+        <div class="grid-card">
+          <div class="gc-label">Maidenhead locator</div>
+          <div class="gc-val" id="s-maidenhead">
+            <a href="#" onclick="openUrl('https://whatsmylocator.co.uk/');return false;"
+              data-tip="WhatsMyLocator"
+              style="color:var(--gc-val);text-decoration:none;">JO02ds</a>
+          </div>
+          <div class="gc-sub">VHF/UHF contests</div>
+        </div>
+        <div class="grid-card" id="card-wab">
+          <div class="gc-label">WAB square</div>
+          <div class="gc-val" id="s-wab">TF52</div>
+          <div class="gc-sub">Worked All Britain</div>
+        </div>
+        <div class="grid-card" id="card-os">
+          <div class="gc-label">OS grid ref</div>
+          <div class="gc-val" id="s-os" style="font-size:10px;">TF 54791</div>
+          <div class="gc-sub">Ordnance Survey</div>
+        </div>
+      </div>
+      <div class="coord-row">
+        <span class="coord-val" id="s-coords">52.7563° N · 0.2923° E</span>
+        <span class="coord-sub" id="s-qth">Terrington St Clement</span>
+      </div>
+    </div>
+
+  </div><!-- end panel-loc -->
+
+  <!-- SHACK PANEL -->
+  <div class="panel" id="panel-shack">
+    <div class="sec-header" data-section="s-equip">
+      <span class="sec-title">Shack</span>
+      <span class="sec-arrow" id="arrow-s-equip">▼</span>
+    </div>
+    <div class="sec-body" id="body-s-equip">
+      <div id="shack-empty" class="empty-section">No shack info set — <a onclick="document.title='open-edit:'+Date.now()">Edit Shack Info</a></div>
+      <div id="s-rigs">
+        <div class="info-row"><span class="info-label">Rig 1 · 2m</span><span class="info-val">Yaesu FT-2800M · 65W</span></div>
+        <div class="info-row"><span class="info-label">Rig 2 · 2m/70cm</span><span class="info-val">Yaesu FT-7800 · 50/40W</span></div>
+      </div>
+      <div class="info-row"><span class="info-label">Antenna</span><span class="info-val" id="s-antenna">Moonraker Supergainer MkII</span></div>
+      <div class="info-row" style="border-bottom:none;" id="row-antenna2"><span class="info-label">Antenna 2</span><span class="info-val" id="s-antenna2"></span></div>
+    </div>
+
+    <div class="divider" style="margin-top:2px;"></div>
+
+    <!-- QSO Info — collapsible -->
+    <div class="sec-header" data-section="s-qso">
+      <span class="sec-title">QSO Info</span>
+      <span class="sec-arrow" id="arrow-s-qso">▼</span>
+    </div>
+    <div class="sec-body" id="body-s-qso">
+      <div class="info-row"><span class="info-label">QSL</span><span class="info-val" id="s-qsl">QRZ Logbook</span></div>
+      <div class="info-row"><span class="info-label">Modes</span><span class="info-val" id="s-modes">FM</span></div>
+      <div class="info-row"><span class="info-label">Licensed</span><span class="info-val" id="s-lic">Intermediate 2026</span></div>
+      <div class="info-row" style="border-bottom:none;"><span class="info-label">QRZ</span><span class="info-val" id="s-qrz"><a id="s-qrz-link" href="#" onclick="openUrl(this.dataset.url);return false;" data-url="https://qrz.com/db/M8TWY" data-tip="QRZ Logbook" style="color:var(--gc-val);text-decoration:none;">qrz.com/db/M8TWY</a></span></div>
+    </div>
+
+  </div>
+
+  <div class="panel-divider" id="panel-divider"></div>
+
+  <!-- PROPAGATION PANEL -->
+  <div class="panel" id="panel-prop">
+    <div class="sec-header" data-section="s-solar">
+      <span class="sec-title">Solar Indices</span>
+      <span class="sec-arrow" id="arrow-s-solar">▼</span>
+    </div>
+    <div class="sec-body" id="body-s-solar">
+      <div id="prop-content"><div class="loading">Loading solar data…</div></div>
+    </div>
+  </div>
+
+  <!-- SOTA/POTA SPOTS PANEL -->
+  <div class="panel" id="panel-spots">
+    <div class="sec-header" data-section="s-spots">
+      <span class="sec-title">SOTA / POTA Spots</span>
+      <span class="sec-arrow" id="arrow-s-spots">▼</span>
+    </div>
+    <div class="sec-body" id="body-s-spots">
+      <div class="spot-header-row">
+        <span class="spot-type" style="visibility:hidden;">----</span>
+        <span class="spot-call" style="color:var(--text-label);font-size:8px;">CALLSIGN</span>
+        <span class="spot-ref" style="color:var(--text-label);font-size:8px;">REFERENCE</span>
+        <span class="spot-freq" style="color:var(--text-label);font-size:8px;">FREQ</span>
+        <span class="spot-mode" style="color:var(--text-label);font-size:8px;">MODE</span>
+      </div>
+      <div id="spots-list"><div class="spots-empty">Loading spots…</div></div>
+    </div>
+  </div>
+
+  </div><!-- end panels-wrap -->
+  <div class="statusbar" style="display:none;">
+    <span><span class="status-dot" id="status-dot"></span><span id="status-text">Fetching…</span></span>
+    <span><a href="#" onclick="openUrl('https://www.hamqsl.com/solar.html');return false;" data-tip="N0NBH Solar Data" style="color:var(--text-sub);text-decoration:none;">N0NBH · hamqsl.com</a></span>
+  </div>
+
+</div>
+<script>
+// ── Collapsible sections ─────────────────────────────────────────────────────
+function toggleSection(id) {
+  const body  = document.getElementById('body-' + id);
+  const arrow = document.getElementById('arrow-' + id);
+  if (!body || !arrow) return;
+  const collapsed = body.classList.toggle('collapsed');
+  arrow.classList.toggle('collapsed', collapsed);
+  // Notify Python to resize via title change
+  setTimeout(() => { document.title = 'resize:' + Date.now(); }, 80);
+}
+
+// Simple click handler — drag is now handled entirely in Python
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.sec-header').forEach(h => {
+    h.addEventListener('click', e => {
+      const id = h.getAttribute('data-section');
+      if (id) toggleSection(id);
+    });
+  });
+});
+
+// ── Theme toggle ─────────────────────────────────────────────────────────────
+function setTheme(theme) {
+  document.body.className = theme === 'light' ? 'light' : '';
+  try { localStorage.setItem('m8twy-theme', theme); } catch(e) {}
+}
+function getTheme() {
+  try { return localStorage.getItem('m8twy-theme') || 'dark'; } catch(e) { return 'dark'; }
+}
+// Apply saved theme on load
+document.addEventListener('DOMContentLoaded', () => setTheme(getTheme()));
+
+// ── View management ──────────────────────────────────────────────────────────
+// Helper: expand or collapse a shack sub-section
+function setSection(id, visible) {
+  const body  = document.getElementById('body-' + id);
+  const arrow = document.getElementById('arrow-' + id);
+  if (!body || !arrow) return;
+  body.classList.toggle('collapsed', !visible);
+  arrow.classList.toggle('collapsed', !visible);
+}
+
+function setPanels(visible) {
+  const panels = {
+    'loc':   document.getElementById('panel-loc'),
+    'shack': document.getElementById('panel-shack'),
+    'prop':  document.getElementById('panel-prop'),
+    'spots': document.getElementById('panel-spots'),
+  };
+  const divider = document.getElementById('panel-divider');
+  Object.entries(panels).forEach(([key, el]) => {
+    if (el) el.classList.toggle('hidden', !visible.includes(key));
+  });
+  if (divider) divider.classList.toggle('hidden',
+    !visible.includes('shack') || !visible.includes('prop'));
+  setTimeout(() => { document.title = 'resize:' + Date.now(); }, 80);
+}
+
+function setView(view) {
+  const map = {
+    'both': ['loc','shack','prop','spots'],
+    'loc':  ['loc'],
+    'shack': ['loc','shack'],
+    'prop':  ['prop','spots'],
+    'spots': ['spots'],
+  };
+  setPanels(map[view] || ['loc','shack','prop','spots']);
+}
+
+// ── Status flash ─────────────────────────────────────────────────────────────
+let flashTimer = null;
+function showStatus(msg, type) {
+  if (!shackData || !shackData.callsign) return;
+  const el = document.getElementById('status-flash');
+  el.textContent = msg;
+  el.className = type;
+  el.style.display = 'block';
+  el.style.opacity = '1';
+  if (flashTimer) clearTimeout(flashTimer);
+  flashTimer = setTimeout(() => {
+    el.style.opacity = '0';
+    setTimeout(() => { el.style.display = 'none'; }, 400);
+  }, 3000);
+}
+
+// ── Shack info ───────────────────────────────────────────────────────────────
+var shackData = {};
+const _tt = document.getElementById('js-tooltip');
+document.addEventListener('mouseover', e => {
+  const el = e.target.closest('[data-tip]');
+  if (el && _tt) {
+    _tt.textContent = el.dataset.tip;
+    _tt.style.display = 'block';
+  }
+});
+document.addEventListener('mousemove', e => {
+  if (_tt && _tt.style.display === 'block') {
+    _tt.style.left = (e.clientX + 12) + 'px';
+    _tt.style.top  = (e.clientY - 24) + 'px';
+  }
+});
+document.addEventListener('mouseout', e => {
+  if (_tt) _tt.style.display = 'none';
+});
+function showContent() {
+  const splash = document.getElementById('splash');
+  const wc = document.getElementById('widget-content');
+  if (splash) splash.classList.add('hidden');
+  if (wc) wc.classList.add('visible');
+}
+function loadShack(s) {
+  shackData = s;
+  if (!s) return;
+  const spotsList = document.getElementById('spots-list');
+  if (spotsList && window._lastSpots) renderSpots(window._lastSpots);
+  // Re-render spots now we have zone info
+    // Show setup prompt if no callsign configured, hide panels
+  const prompt = document.getElementById('setup-prompt');
+  const panelsWrap = document.getElementById('panels-wrap');
+  const header = document.querySelector('.header');
+  const statusbar = document.querySelector('.statusbar');
+  if (s.callsign) {
+    if (prompt) prompt.style.display = 'none';
+    if (panelsWrap) panelsWrap.style.display = 'block';
+    if (header) header.style.display = '';
+    if (statusbar) statusbar.style.display = '';
+  } else {
+    if (prompt) prompt.style.display = 'flex';
+    if (panelsWrap) panelsWrap.style.display = 'none';
+    if (header) header.style.display = 'none';
+    if (statusbar) statusbar.style.display = 'none';
+  }
+  const set = (id, val) => { const el = document.getElementById(id); if (el && val !== undefined) el.textContent = val; };
+  set('h-callsign',  s.callsign || 'ShackDash');
+  set('h-qth',       [s.name, s.county, s.country].filter(Boolean).join(' · '));
+  set('h-zones',     `CQ Zone ${s.cq_zone} · ITU Zone ${s.itu_zone}`);
+
+  // Maidenhead — link to whatsmylocator.co.uk
+  const mhEl = document.getElementById('s-maidenhead');
+  if (mhEl && s.maidenhead) {
+    mhEl.innerHTML = `<a href="#" onclick="openUrl('https://whatsmylocator.co.uk/');return false;"
+      data-tip="WhatsMyLocator" style="color:var(--gc-val);text-decoration:none;">${s.maidenhead}</a>`;
+  }
+  set('s-wab',       s.wab);
+  set('s-os',        s.os_grid);
+  const ukPfx = ['G','M','2E','2I','2M','2W','GD','GI','GJ','GM','GU','GW','EI'];
+  const isUK  = s.callsign && ukPfx.some(p => s.callsign.toUpperCase().startsWith(p));
+  const wabCard = document.getElementById('card-wab');
+  const osCard  = document.getElementById('card-os');
+  if (wabCard) wabCard.style.display = isUK ? '' : 'none';
+  if (osCard)  osCard.style.display  = isUK ? '' : 'none';
+  set('s-antenna2',  s.antenna2 || '');
+  const ant2row = document.getElementById('row-antenna2');
+  if (ant2row) ant2row.style.display = (s.antenna2 && s.antenna2.trim()) ? '' : 'none';
+  const hasRigs = !!(s.rigs && s.rigs.some(r => (r.value||'').trim() !== ''));
+  const hasQSL  = !!(s.licence && s.licence.trim() !== '') || !!(s.qsl && s.qsl !== 'QRZ Logbook');
+  const shackEmpty = document.getElementById('shack-empty');
+  const qsoEmpty   = document.getElementById('qso-empty');
+  const rigsEl     = document.getElementById('s-rigs');
+  if (shackEmpty) shackEmpty.style.display = hasRigs ? 'none' : 'block';
+  if (rigsEl)     rigsEl.style.display     = hasRigs ? 'block' : 'none';
+  if (qsoEmpty)   qsoEmpty.style.display   = hasQSL  ? 'none' : 'block';
+  set('s-coords',    `${s.lat} · ${s.lon}`);
+  set('s-qth',       s.qth);
+  set('s-antenna',   s.antenna);
+  set('s-2m',        s.calling_2m);
+  set('s-70cm',      s.calling_70cm);
+  set('s-qsl',       s.qsl);
+  set('s-modes',     s.modes);
+  set('s-lic',       s.licence);
+  // QRZ — render as clickable link, stripping https:// for display
+  const qrzEl = document.getElementById('s-qrz');
+  if (qrzEl && s.qrz) {
+    const url   = s.qrz.startsWith('http') ? s.qrz : 'https://' + s.qrz;
+    const label = s.qrz.replace(/^https?:\/\//, '');
+    qrzEl.innerHTML = `<a href="#" onclick="openUrl('${url}');return false;"
+      data-url="${url}" data-tip="QRZ" style="color:var(--text-link);text-decoration:none;">${label}</a>`;
+  }
+  if (s.rigs && s.rigs.length) {
+    document.getElementById('s-rigs').innerHTML = s.rigs.map((r, i) =>
+      `<div class="info-row"><span class="info-label">${r.label || 'Rig ' + (i+1)}</span><span class="info-val">${r.value || '—'}</span></div>`
+    ).join('');
+  }
+}
+
+// Open URL in default browser via WebKit navigation policy
+function openUrl(url) {
+  window.location.href = url;
+}
+
+async function fetchShack() {
+  try {
+    const r = await fetch('http://127.0.0.1:7373/shack.json?t=' + Date.now());
+    if (r.ok) {
+      const data = await r.json();
+      // Show callsign in splash before content appears
+      const sc = document.getElementById('splash-callsign');
+      if (sc && data.callsign) sc.textContent = data.callsign;
+      // Short delay so callsign is visible, then show content
+      setTimeout(() => {
+        const splash = document.getElementById('splash');
+        const wc = document.getElementById('widget-content');
+        if (splash) splash.classList.add('hidden');
+        if (wc) wc.classList.add('visible');
+        loadShack(data);
+        // Signal Python to resize now content is visible
+        setTimeout(() => { document.title = 'resize:' + Date.now(); }, 100);
+      }, 1200);
+    } else {
+      showContent();
+    }
+  } catch(e) { showContent(); console.log('No shack.json, using defaults.'); }
+}
+
+// ── Propagation ───────────────────────────────────────────────────────────────
+const SOLAR_PATH = 'http://127.0.0.1:7373/solar.json';
+
+function condClass(val) {
+  if (!val) return 'cond-unknown';
+  const v = val.toLowerCase();
+  if (v === 'good') return 'cond-good';
+  if (v === 'fair') return 'cond-fair';
+  if (v === 'poor') return 'cond-poor';
+  if (v.includes('closed')) return 'cond-closed';
+  return 'cond-unknown';
+}
+function condLabel(val) {
+  if (!val) return '—';
+  if (val.toLowerCase().includes('closed')) return 'Closed';
+  return val;
+}
+function kColor(k) {
+  const v = parseInt(k);
+  if (v <= 2) return '#4de090';
+  if (v <= 4) return '#f0c040';
+  if (v <= 6) return '#f08040';
+  return '#e05050';
+}
+
+function renderSolar(d) {
+  const bandOrder  = ['80m-40m','30m-20m','17m-15m','12m-10m'];
+  const bandLabels = {'80m-40m':'80/40m','30m-20m':'30/20m','17m-15m':'17/15m','12m-10m':'12/10m'};
+  const bandsHTML = bandOrder.map(b => {
+    const day   = d.bands[b] ? d.bands[b]['day']   || '—' : '—';
+    const night = d.bands[b] ? d.bands[b]['night'] || '—' : '—';
+    return `<div class="band-row">
+      <span class="band-name">${bandLabels[b]}</span>
+      <span style="display:flex;gap:3px;">
+        <span class="band-pill ${condClass(day)}"   title="Day">${condLabel(day)}</span>
+        <span class="band-pill ${condClass(night)}" title="Night">${condLabel(night)}</span>
+      </span>
+    </div>`;
+  }).join('');
+
+  const vhfMap = {};
+  (d.vhf || []).forEach(v => { vhfMap[v.name + '|' + v.loc] = v.val; });
+  const vhfRows = [
+    { label: '6m E-Skip',  key: 'E-Skip|europe_6m' },
+    { label: '4m E-Skip',  key: 'E-Skip|europe_4m' },
+    { label: '2m E-Skip',  key: 'E-Skip|europe' },
+    { label: 'VHF Aurora', key: 'vhf-aurora|null' },
+    { label: 'EME Deg.',   key: 'EME|null' },
+    { label: 'Meteor Sc.', key: 'Meteor Scatter|null' },
+  ];
+  const vhfHTML = vhfRows
+    .filter(r => vhfMap[r.key] !== undefined)
+    .map(r => `<div class="vhf-card">
+      <span class="vhf-label">${r.label}</span>
+      <span class="vhf-val ${condClass(vhfMap[r.key])}">${condLabel(vhfMap[r.key])}</span>
+    </div>`).join('');
+  const mappedKeys = new Set(vhfRows.map(r => r.key));
+  const extraVhf = (d.vhf || [])
+    .filter(v => !mappedKeys.has(v.name + '|' + v.loc))
+    .map(v => `<div class="vhf-card">
+      <span class="vhf-label">${v.name}</span>
+      <span class="vhf-val ${condClass(v.val)}">${condLabel(v.val)}</span>
+    </div>`).join('');
+
+  document.getElementById('prop-content').innerHTML = `
+    <div class="solar-row">
+      <div class="solar-card"><div class="sc-label">SFI</div><div class="sc-val">${d.solarflux}</div><div class="sc-sub">Solar Flux</div></div>
+      <div class="solar-card"><div class="sc-label">SN</div><div class="sc-val">${d.sunspots}</div><div class="sc-sub">Sunspots</div></div>
+      <div class="solar-card"><div class="sc-label">A</div><div class="sc-val">${d.aindex}</div><div class="sc-sub">A-Index</div></div>
+      <div class="solar-card"><div class="sc-label">K</div><div class="sc-val" style="color:${kColor(d.kindex)}">${d.kindex}</div><div class="sc-sub">K-Index</div></div>
+      <div class="solar-card"><div class="sc-label">X-Ray</div><div class="sc-val" style="font-size:10px;">${d.xray || '—'}</div><div class="sc-sub">Flux</div></div>
+    </div>
+    <div class="extra-row">
+      <span class="extra-item">Geomag: <b>${d.geomagfield}</b></span>
+      <span class="extra-item">Noise: <b>${d.signalnoise}</b></span>
+    </div>
+    <div class="sec-title-plain">HF Bands <span style="color:var(--text-dim);font-size:8px;text-transform:none;letter-spacing:0;">Day / Night</span></div>
+    <div class="bands-grid">${bandsHTML}</div>
+    <div class="sec-title-plain">VHF Conditions</div>
+    <div class="vhf-grid">${vhfHTML}${extraVhf}</div>
+  `;
+  document.getElementById('status-dot').className = 'status-dot ok';
+  document.getElementById('status-text').textContent = 'Live · ' + (d.fetched || '');
+}
+
+async function loadData() {
+  try {
+    // Quick server check
+    const r = await fetch(SOLAR_PATH + '?t=' + Date.now());
+    if (!r.ok) throw new Error('not found');
+    renderSolar(await r.json());
+  } catch(e) {
+    document.getElementById('prop-content').innerHTML =
+      `<div class="error-msg">Could not load solar data.<br>
+      Check: <code>python3 ~/shack/m8twy_solar_server.py</code></div>`;
+    document.getElementById('status-dot').className = 'status-dot err';
+    document.getElementById('status-text').textContent = 'Server not running?';
+  }
+}
+
+fetchShack();
+loadData();
+// Signal Python that page JS is ready
+document.title = 'page-ready:' + Date.now();
+
+// Dismiss loading overlay once content is ready
+
+// Fetch spots directly from JS using XMLHttpRequest
+function fetchSpotsXHR() {
+  const xhr = new XMLHttpRequest();
+  xhr.open('GET', 'http://127.0.0.1:7373/spots', true);
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+      try {
+        renderSpots(JSON.parse(xhr.responseText));
+      } catch(e) {}
+    }
+  };
+  xhr.onerror = function() {
+    const el = document.getElementById('spots-list');
+    if (el) el.innerHTML = '<div class="spots-empty">Spots server unavailable</div>';
+  };
+  xhr.send();
+}
+// Fetch after page settles (5s to ensure shackData is loaded), then every 5 minutes
+setTimeout(fetchSpotsXHR, 5000);
+setInterval(fetchSpotsXHR, 5 * 60 * 1000);
+setInterval(loadData, 15 * 60 * 1000);
+
+// Check for stale solar data every 5 mins (catches post-sleep scenarios)
+setInterval(() => {
+  const dot = document.getElementById('status-dot');
+  const liveText = document.getElementById('status-live');
+  if (!liveText) return;
+  const match = liveText.textContent.match(/(\d{2}) (\w{3}) (\d{4}) (\d{2})(\d{2})Z/);
+  if (!match) return;
+  const fetched = new Date(match[1] + ' ' + match[2] + ' ' + match[3] + ' ' + match[4] + ':' + match[5] + ':00 UTC');
+  const ageHrs = (Date.now() - fetched.getTime()) / 3600000;
+  if (ageHrs > 3) {
+    console.log('Solar data stale (' + ageHrs.toFixed(1) + 'hrs), signalling refresh');
+    document.title = 'solar-refresh:' + Date.now();
+  }
+}, 5 * 60 * 1000);
+
+function openSpotRef(type, ref) {
+  if (type === 'SOTA') openUrl('https://sotl.as/summits/' + ref);
+  else openUrl('https://pota.app/#/park/' + ref);
+}
+
+function renderSpots(allSpots) {
+  window._lastSpots = allSpots;  // cache for re-render after loadShack
+  const el = document.getElementById('spots-list');
+  if (!el) return;
+  const cqZone = (shackData && shackData.cq_zone) ? shackData.cq_zone : null;
+  // CQ zone prefix map - filters spots to operator's region
+  const cqPrefixes = {
+    '1':  ['VE8','VY1','VY0'],
+    '2':  ['VE1','VE2','VE3','VE4','VE5','VE6','VE7','VY2'],
+    '3':  ['KL','AL','VE8','ZL8'],
+    '4':  ['VE','VB','VC'],
+    '5':  ['W','K','N','AA','AB','AC','AD','AE','AF','AG','AH','AI','AJ','AK','AL','AM','AN','AO'],
+    '6':  ['XE','XF'],
+    '7':  ['XE','YN','TI','HR','YS','TG'],
+    '8':  ['W1','W2','W3','W4','KP4','KP2','VP9','V2','J3'],
+    '9':  ['PY','PP','PQ','PR','PS','PT','PU','PV','PX','ZY','ZZ'],
+    '10': ['CE','XQ','XR','CB','CA'],
+    '11': ['LU','L2','L3','L4','L5','L6','L7','L8','L9','PY1'],
+    '14': ['G','M','2E','2I','2M','2W','EI','GD','GI','GJ','GM','GU','GW',
+           'PA','DL','F','ON','SP','OK','OZ','SM','LA','OH','ES','YL','LY',
+           'HA','S5','9A','YU','LZ','SV','TA','UA','OE','HB','I','IS','IT',
+           'EA','CT','EI','TF','LX','DF','DC','DH','DK','DL','DA','DB','DD'],
+    '16': ['UA','RA','RK','RM','R0','R1','R2','R3','R4','R5','R6','R7','R8','R9'],
+    '17': ['UA9','RA9','UA0','RA0'],
+    '18': ['UA9','RA9'],
+    '19': ['UA0','RA0'],
+    '20': ['UR','US','UT','UX','UY','UZ','EM','EN','EO','ER','EU','EW','EK'],
+    '21': ['4X','4Z','YI','OD','A4','A6','A7','A9','HZ'],
+    '24': ['BY','BT','BV','BA','BD','BI','BJ','BL'],
+    '25': ['JA','JD','JE','JF','JG','JH','JI','JJ','JK','JL','JM','JN','JO','JP','JQ','JR','JS','HL','DS','DT'],
+    '26': ['VU','AT','AU','AV','AW','4S','S2','XW','XZ','HS','E2','XU'],
+    '28': ['DU','4D','YB','YC','YD','YE','YF','YG','YH','V8','9M'],
+    '29': ['VK','ZL','FK','FO','KH0'],
+    '33': ['EA8','CN','D4','TU','9G','5N','TZ','XT','TL','TR','TJ','CR','D2','ZS'],
+    '35': ['ZS','ZR','ZT','ZU','A2','V5','ZE','9J','C9','7Q','VQ9'],
+    '38': ['5Z','5H','5X','ET','9I','C9'],
+  };
+  let spots = allSpots || [];
+  if (cqZone && cqPrefixes[cqZone]) {
+    const pfx = cqPrefixes[cqZone];
+    spots = spots.filter(s =>
+      pfx.some(p => (s.reference||'').startsWith(p+'/') || (s.callsign||'').toUpperCase().startsWith(p))
+    );
+  }
+  if (!spots.length) {
+    const zoneLabel = cqZone ? 'CQ Zone ' + cqZone : 'your region';
+    el.innerHTML = '<div class="spots-empty">No spots active in ' + zoneLabel + ' right now</div>';
+    return;
+  }
+  el.innerHTML = spots.slice(0,12).map(s => {
+    const cls  = s.type === 'SOTA' ? 'spot-sota' : 'spot-pota';
+    const freq = s.freq ? parseFloat(s.freq).toFixed(3) + ' MHz' : '—';
+    return '<div class="spot-row">' +
+      '<span class="spot-type ' + cls + '">' + s.type + '</span>' +
+      '<span class="spot-call" data-tip="QRZ lookup"><a href="#" onclick="openUrl(\'https://qrz.com/db/' + s.callsign.split('/').reduce((a,b)=>a.length>=b.length?a:b) + '\');return false;" style="color:var(--text-value);text-decoration:none;">' + s.callsign + '</a></span>' +
+      '<span class="spot-ref" style="cursor:pointer;text-decoration:underline dotted;" data-tip="' + (s.type==='SOTA' ? 'sotl.as' : 'pota.app') + '" onclick="openSpotRef(\''+s.type+'\',\''+s.reference+'\')">'+s.reference+'</span>' +
+      '<span class="spot-freq">' + freq + '</span>' +
+      '<span class="spot-mode">' + s.mode + '</span>' +
+      '</div>';
+  }).join('');
+}
+
+function loadSpots() {
+  fetch('http://127.0.0.1:7373/spots')
+    .then(r => r.json())
+    .then(spots => renderSpots(spots))
+    .catch(() => {
+      document.getElementById('spots-list').innerHTML =
+        '<div class="spots-empty">Spots unavailable</div>';
+    });
+}
+
+// Python is notified via title changes from section toggles and setView()
+</script>
+</body>
+</html>

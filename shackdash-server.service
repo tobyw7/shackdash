@@ -1,0 +1,11 @@
+[Unit]
+Description=ShackDash Solar Data Server
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 %h/shack/shackdash_server.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target

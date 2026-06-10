@@ -1,0 +1,34 @@
+{
+  "callsign": "M0XYZ",
+  "name": "Alex",
+  "qth": "Anytown",
+  "county": "Norfolk",
+  "country": "England",
+  "lat": "52.7561\u00b0 N",
+  "lon": "0.2920\u00b0 E",
+  "maidenhead": "JO02ds",
+  "wab": "TF52",
+  "os_grid": "TF 54771 20065",
+  "cq_zone": "14",
+  "itu_zone": "27",
+  "licence": "Foundation 2024",
+  "qsl": "QRZ Logbook",
+  "modes": "FM, SSB",
+  "qrz": "https://qrz.com/db/M0XYZ",
+  "rigs": [
+    {
+      "band": "2m",
+      "rig": "Yaesu FT-2800M",
+      "power": "65W"
+    },
+    {
+      "band": "2m/70cm",
+      "rig": "Yaesu FT-7800",
+      "power": "50/40W"
+    }
+  ],
+  "antenna": "Vertical",
+  "widget_theme": "dark",
+  "widget_scale": 1.0,
+  "antenna2": "Vertical"
+}
