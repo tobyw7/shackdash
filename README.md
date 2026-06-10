@@ -4,13 +4,12 @@ A lightweight amateur radio station desktop widget for Ubuntu/Linux.
 
 Displays real-time solar propagation data, HF/VHF band conditions, station info, and live SOTA/POTA spots — all in a compact, collapsible sidebar widget.
 
-
 <p align="center">
-  <img src="screenshots/ShackDash-Loaded-dark.png" width="32%" alt="ShackDash Dark Mode"/>
+  <img src="screenshots/shackdash_dark.png" width="32%" alt="ShackDash Dark Mode"/>
   &nbsp;
-  <img src="screenshots/ShackDash-Loaded-light.png" width="32%" alt="ShackDash Light Mode"/>
+  <img src="screenshots/shackdash_light.png" width="32%" alt="ShackDash Light Mode"/>
   &nbsp;
-  <img src="screenshots/Loading-Screen.png" width="32%" alt="ShackDash Loading Screen"/>
+  <img src="screenshots/shackdash_splash.png" width="32%" alt="ShackDash Loading Screen"/>
 </p>
 
 ---
@@ -84,6 +83,23 @@ systemctl --user enable --now shackdash-server.service
 # Solar data cron (every 3 hours)
 (crontab -l; echo "0 */3 * * * /usr/bin/python3 ~/shack/shackdash_fetch.py") | crontab -
 ```
+
+---
+
+## Uninstallation
+
+To remove ShackDash from your system:
+
+```bash
+cd /path/to/shackdash
+bash uninstall.sh
+```
+
+The uninstall script will:
+1. Stop and remove the systemd service
+2. Remove the cron job
+3. Remove the autostart entry
+4. Optionally remove `~/shack/` entirely, or just the ShackDash program files (keeping your `shack.json` config if you plan to reinstall)
 
 ---
 
