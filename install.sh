@@ -65,12 +65,11 @@ cp shackdash_widget.html "$SHACK_DIR/"
 cp shackdash_icon.png "$SHACK_DIR/"
 cp shackdash_icon.svg "$SHACK_DIR/"
 
-# Copy example config if no existing config
-if [ ! -f "$SHACK_DIR/shack.json" ]; then
-    cp shack.example.json "$SHACK_DIR/shack.json"
-    echo "✓ Created default shack.json (run ShackDash to configure)"
-else
+# Preserve existing config if present
+if [ -f "$SHACK_DIR/shack.json" ]; then
     echo "✓ Existing shack.json preserved"
+else
+    echo "✓ No shack.json found — Setup Wizard will run on first launch"
 fi
 echo "✓ Files copied to $SHACK_DIR"
 

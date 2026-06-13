@@ -335,6 +335,7 @@ class ShackDashWidget:
         self.window.set_keep_above(True)
         self.window.move(5, 25)
         self.window.connect('delete-event', self.on_delete_event)
+        self.window.connect('configure-event', self.on_window_configure)
         self.window.set_skip_taskbar_hint(True)
         self.window.set_skip_pager_hint(True)
         self.window.set_type_hint(Gdk.WindowTypeHint.UTILITY)
@@ -457,19 +458,20 @@ class ShackDashWidget:
         max_h = 9999
         try:
             display = Gdk.Display.get_default()
-            # Try primary monitor first
-            monitor = display.get_primary_monitor()
+            monitor = None
+            # Prefer the monitor the window is actually on
+            if self.window and self.window.get_window():
+                monitor = display.get_monitor_at_window(self.window.get_window())
             if not monitor:
-                # Wayland fallback: use first monitor
+                monitor = display.get_primary_monitor()
+            if not monitor:
                 monitor = display.get_monitor(0)
             if monitor:
                 screen_h = monitor.get_geometry().height
-                # Also try workarea which excludes panels
                 workarea = monitor.get_workarea()
                 screen_h = workarea.height if workarea.height > 0 else screen_h
                 max_h = screen_h - 40  # Account for top panel and taskbar
             else:
-                # Last resort: use GTK screen size
                 screen = Gdk.Screen.get_default()
                 if screen:
                     max_h = screen.get_height() - 35
@@ -670,6 +672,25 @@ class ShackDashWidget:
             "document.querySelector('.widget').scrollHeight;",
             None, on_result, None
         )
+    def on_window_configure(self, widget, event):
+        # Detect monitor change and re-apply resize cap
+        try:
+            display = Gdk.Display.get_default()
+            monitor = display.get_monitor_at_window(self.window.get_window())
+            if monitor != getattr(self, '_last_monitor', None):
+                self._last_monitor = monitor
+                if hasattr(self, '_monitor_resize_timer') and self._monitor_resize_timer:
+                    GLib.source_remove(self._monitor_resize_timer)
+                self._monitor_resize_timer = GLib.timeout_add(300, self._on_monitor_changed)
+        except Exception:
+            pass
+        return False
+
+    def _on_monitor_changed(self):
+        self._monitor_resize_timer = None
+        self.resize_to_content(delay=50)
+        return False
+
     def resize_to_content(self, delay=120):
         def measure():
             def apply_height(h):
