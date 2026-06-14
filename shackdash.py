@@ -652,10 +652,6 @@ class ShackDashWidget:
         reload_item.connect('activate', self.on_reload)
         menu.append(reload_item)
 
-        about_item = Gtk.MenuItem(label='About ShackDash…')
-        about_item.connect('activate', self.on_about)
-        menu.append(about_item)
-
         menu.append(Gtk.SeparatorMenuItem())
 
         quit_item = Gtk.MenuItem(label='Quit')
