@@ -20,7 +20,7 @@ SHACK_JSON  = os.path.expanduser('~/shack/shack.json')
 SHACK_DIR   = os.path.expanduser('~/shack')
 ICON        = os.path.expanduser('~/shack/shackdash_icon.png')
 WIDTH       = 360
-APP_VERSION = '0.1.2'
+APP_VERSION = '0.1.3'
 ABOUT_LINK_URL = 'https://go.frantik.it/m8twy'  # placeholder - update with your YOURLS short link
 
 def detect_scale():
