@@ -20,6 +20,8 @@ SHACK_JSON  = os.path.expanduser('~/shack/shack.json')
 SHACK_DIR   = os.path.expanduser('~/shack')
 ICON        = os.path.expanduser('~/shack/shackdash_icon.png')
 WIDTH       = 360
+APP_VERSION = '0.1.2'
+ABOUT_LINK_URL = 'https://go.frantik.it/m8twy'  # placeholder - update with your YOURLS short link
 
 def detect_scale():
     """Auto-detect recommended scale factor based on screen DPI."""
@@ -570,6 +572,11 @@ class ShackDashWidget:
         title = Gtk.MenuItem(label='ShackDash')
         title.set_sensitive(False)
         menu.append(title)
+
+        about_item = Gtk.MenuItem(label='About ShackDash…')
+        about_item.connect('activate', self.on_about)
+        menu.append(about_item)
+
         menu.append(Gtk.SeparatorMenuItem())
 
         self.toggle_item = Gtk.MenuItem(label='Hide Widget')
@@ -644,6 +651,10 @@ class ShackDashWidget:
         reload_item = Gtk.MenuItem(label='Reload Widget')
         reload_item.connect('activate', self.on_reload)
         menu.append(reload_item)
+
+        about_item = Gtk.MenuItem(label='About ShackDash…')
+        about_item.connect('activate', self.on_about)
+        menu.append(about_item)
 
         menu.append(Gtk.SeparatorMenuItem())
 
@@ -751,6 +762,58 @@ class ShackDashWidget:
             self.on_setup_wizard(None)
             # Resize again after wizard closes
             GLib.timeout_add(500, lambda: self.resize_to_content() or False)
+
+    def on_about(self, _):
+        dlg = Gtk.Dialog(title='About ShackDash', transient_for=self.window, modal=True)
+        dlg.set_default_size(320, 0)
+        box = dlg.get_content_area()
+        box.set_spacing(8)
+        box.set_margin_start(20)
+        box.set_margin_end(20)
+        box.set_margin_top(16)
+        box.set_margin_bottom(10)
+
+        # Icon
+        try:
+            icon = Gtk.Image.new_from_file(os.path.expanduser('~/shack/shackdash_icon.png'))
+            icon.set_pixel_size(48)
+            box.pack_start(icon, False, False, 4)
+        except Exception:
+            pass
+
+        title = Gtk.Label()
+        title.set_markup('<b><big>ShackDash</big></b>')
+        box.pack_start(title, False, False, 0)
+
+        version = Gtk.Label(label=f'Version {APP_VERSION}')
+        version.get_style_context().add_class('dim-label')
+        box.pack_start(version, False, False, 0)
+
+        desc = Gtk.Label(label='Amateur radio station desktop widget')
+        desc.set_line_wrap(True)
+        box.pack_start(desc, False, False, 4)
+
+        sep = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
+        box.pack_start(sep, False, False, 4)
+
+        def add_link(label_text, url):
+            link = Gtk.LinkButton.new_with_label(url, label_text)
+            link.set_halign(Gtk.Align.START)
+            box.pack_start(link, False, False, 0)
+
+        add_link('GitHub repository', 'https://github.com/tobyw7/shackdash')
+        add_link('Report an issue', 'https://github.com/tobyw7/shackdash/issues')
+        add_link('More from M8TWY', ABOUT_LINK_URL)
+
+        footer = Gtk.Label()
+        footer.set_markup('<small>73 de M8TWY</small>')
+        footer.set_margin_top(8)
+        box.pack_start(footer, False, False, 0)
+
+        dlg.add_button('Close', Gtk.ResponseType.CLOSE)
+        dlg.show_all()
+        dlg.run()
+        dlg.destroy()
 
     def on_setup_wizard(self, _):
         import sys
