@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 ShackDash - GTK WebKit wrapper with AppIndicator tray icon
-Shack info loaded from ~/shack/shack.json — editable via menu.
+Shack info loaded from ~/.local/share/shackdash/shack.json — editable via menu.
 """
 import gi
 gi.require_version('Gtk', '3.0')
@@ -9,19 +9,30 @@ gi.require_version('WebKit2', '4.1')
 gi.require_version('AyatanaAppIndicator3', '0.1')
 from gi.repository import Gtk, WebKit2, GLib, Gdk, AyatanaAppIndicator3 as AppIndicator3
 import os
+import shutil
 import subprocess
 import threading
 import json
 
 PORT        = 7373
-HTML        = os.path.expanduser('~/shack/shackdash_widget.html')
-FETCHER     = os.path.expanduser('~/shack/shackdash_fetch.py')
-SHACK_JSON  = os.path.expanduser('~/shack/shack.json')
-SHACK_DIR   = os.path.expanduser('~/shack')
-ICON        = os.path.expanduser('~/shack/shackdash_icon.png')
+APP_DIR     = os.path.expanduser('~/.local/share/shackdash')
+HTML        = os.path.join(APP_DIR, 'shackdash_widget.html')
+FETCHER     = os.path.join(APP_DIR, 'shackdash_fetch.py')
+SHACK_JSON  = os.path.join(APP_DIR, 'shack.json')
+SHACK_DIR   = APP_DIR
+ICON        = os.path.join(APP_DIR, 'shackdash_icon.png')
 WIDTH       = 360
-APP_VERSION = '0.1.3'
+APP_VERSION = '0.1.4'
 ABOUT_LINK_URL = 'https://go.frantik.it/m8twy'  # placeholder - update with your YOURLS short link
+
+def _migrate_legacy_dir():
+    """One-time move of the old ~/shack layout for users who pulled new code without reinstalling."""
+    legacy = os.path.expanduser('~/shack')
+    if os.path.isdir(legacy) and not os.path.exists(APP_DIR):
+        os.makedirs(os.path.dirname(APP_DIR), exist_ok=True)
+        shutil.move(legacy, APP_DIR)
+        print(f"Migrated {legacy} -> {APP_DIR}")
+_migrate_legacy_dir()
 
 def detect_scale():
     """Auto-detect recommended scale factor based on screen DPI."""
@@ -142,7 +153,7 @@ class SetupWizardDialog(Gtk.Dialog):
         # Load existing values if available
         existing = {}
         try:
-            with open(os.path.expanduser('~/shack/shack.json')) as f:
+            with open(SHACK_JSON) as f:
                 existing = json.load(f)
         except Exception:
             pass
@@ -325,9 +336,8 @@ class ShackDashWidget:
         print(f"Widget scale: {self.scale}")
 
         # Set app icon before window creation so taskbar picks it up
-        icon_path = os.path.expanduser('~/shack/m8twy-icon.png')
-        if os.path.exists(icon_path):
-            Gtk.Window.set_default_icon_from_file(icon_path)
+        if os.path.exists(ICON):
+            Gtk.Window.set_default_icon_from_file(ICON)
         self._resize_attempts = 0
 
         # ── Window ──────────────────────────────────────────────────────
@@ -351,10 +361,9 @@ class ShackDashWidget:
             pass
 
         # Set taskbar/window icon at app level
-        icon_path = os.path.expanduser('~/shack/m8twy-icon.png')
-        if os.path.exists(icon_path):
-            self.window.set_icon_from_file(icon_path)
-            Gtk.Window.set_default_icon_from_file(icon_path)
+        if os.path.exists(ICON):
+            self.window.set_icon_from_file(ICON)
+            Gtk.Window.set_default_icon_from_file(ICON)
 
         # ── WebKit ───────────────────────────────────────────────────────
         self.webview = WebKit2.WebView()
@@ -771,7 +780,7 @@ class ShackDashWidget:
 
         # Icon
         try:
-            icon = Gtk.Image.new_from_file(os.path.expanduser('~/shack/shackdash_icon.png'))
+            icon = Gtk.Image.new_from_file(ICON)
             icon.set_pixel_size(48)
             box.pack_start(icon, False, False, 4)
         except Exception:
@@ -813,11 +822,11 @@ class ShackDashWidget:
 
     def on_setup_wizard(self, _):
         import sys
-        sys.path.insert(0, os.path.expanduser('~/shack'))
+        sys.path.insert(0, APP_DIR)
         try:
             import shackdash_setup as setup
         except ImportError:
-            self.js("showStatus('Setup module not found in ~/shack/', 'err');")
+            self.js(f"showStatus('Setup module not found in {APP_DIR}/', 'err');")
             return
 
         dialog = SetupWizardDialog(self.window)

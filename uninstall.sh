@@ -4,7 +4,7 @@
 
 set -e
 
-SHACK_DIR="$HOME/shack"
+SHACK_DIR="$HOME/.local/share/shackdash"
 SERVICE_DIR="$HOME/.config/systemd/user"
 AUTOSTART_DIR="$HOME/.config/autostart"
 
@@ -39,10 +39,10 @@ echo "✓ Autostart removed"
 
 # Ask about shack directory
 echo ""
-read -p "Remove ~/shack/ directory and all station data? [y/N] " remove_data
+read -p "Remove $SHACK_DIR and all station data? [y/N] " remove_data
 if [[ "$remove_data" =~ ^[Yy]$ ]]; then
     rm -rf "$SHACK_DIR"
-    echo "✓ ~/shack/ removed"
+    echo "✓ $SHACK_DIR removed"
 else
     # Remove only ShackDash program files, keep shack.json and solar.json
     rm -f "$SHACK_DIR/shackdash.py"
