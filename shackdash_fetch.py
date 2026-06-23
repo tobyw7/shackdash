@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 M8TWY Solar Data Fetcher
-Fetches N0NBH solar XML and writes it as JSON to ~/shack/solar.json
+Fetches N0NBH solar XML and writes it as JSON to ~/.local/share/shackdash/solar.json
 Run on a cron job every 3 hours.
 """
 import urllib.request
@@ -11,7 +11,7 @@ import os
 import sys
 from datetime import datetime, timezone
 
-OUTPUT = os.path.expanduser("~/shack/solar.json")
+OUTPUT = os.path.expanduser("~/.local/share/shackdash/solar.json")
 
 def get(root, tag):
     el = root.find(tag)

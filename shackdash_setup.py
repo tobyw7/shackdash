@@ -8,7 +8,7 @@ import urllib.request
 import json
 import os
 
-SHACK_JSON = os.path.expanduser('~/shack/shack.json')
+SHACK_JSON = os.path.expanduser('~/.local/share/shackdash/shack.json')
 
 # ── BNG 100km grid squares ────────────────────────────────────────────────────
 BNG = {

@@ -4,7 +4,8 @@
 
 set -e
 
-SHACK_DIR="$HOME/shack"
+SHACK_DIR="$HOME/.local/share/shackdash"
+LEGACY_SHACK_DIR="$HOME/shack"
 SERVICE_DIR="$HOME/.config/systemd/user"
 AUTOSTART_DIR="$HOME/.config/autostart"
 
@@ -50,6 +51,14 @@ sudo apt-get install -y \
     gir1.2-webkit2-4.0 \
     gir1.2-appindicator3-0.1
 echo "✓ Dependencies installed"
+
+# Migrate data from the old ~/shack location, if present
+if [ -d "$LEGACY_SHACK_DIR" ] && [ ! -d "$SHACK_DIR" ]; then
+    echo "→ Migrating $LEGACY_SHACK_DIR to $SHACK_DIR..."
+    mkdir -p "$(dirname "$SHACK_DIR")"
+    mv "$LEGACY_SHACK_DIR" "$SHACK_DIR"
+    echo "✓ Migrated existing station data"
+fi
 
 # Create shack directory
 echo "→ Creating $SHACK_DIR..."
@@ -108,7 +117,7 @@ echo "║   Installation complete! 🎙️          ║"
 echo "╚══════════════════════════════════════╝"
 echo ""
 echo "Run ShackDash now with:"
-echo "  python3 ~/shack/shackdash.py"
+echo "  python3 $SHACK_DIR/shackdash.py"
 echo ""
 echo "On first launch, the Setup Wizard will guide you"
 echo "through entering your callsign and location details."

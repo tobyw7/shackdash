@@ -737,7 +737,7 @@ async function loadData() {
   } catch(e) {
     document.getElementById('prop-content').innerHTML =
       `<div class="error-msg">Could not load solar data.<br>
-      Check: <code>python3 ~/shack/m8twy_solar_server.py</code></div>`;
+      Check: <code>python3 ~/.local/share/shackdash/shackdash_server.py</code></div>`;
     document.getElementById('status-dot').className = 'status-dot err';
     document.getElementById('status-text').textContent = 'Server not running?';
   }

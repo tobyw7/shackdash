@@ -48,14 +48,16 @@ cd shackdash
 
 The installer will:
 1. Install Python/GTK dependencies via `apt`
-2. Copy files to `~/shack/`
+2. Copy files to `~/.local/share/shackdash/`
 3. Install and start the local data server as a systemd user service
 4. Set up a cron job to refresh solar data every 3 hours
 5. Add ShackDash to autostart
 
+If you have an existing `~/shack/` install from before v0.1.4, the installer migrates it automatically.
+
 Then launch:
 ```bash
-python3 ~/shack/shackdash.py
+python3 ~/.local/share/shackdash/shackdash.py
 ```
 
 The **Setup Wizard** will open automatically on first run.
@@ -72,16 +74,16 @@ sudo apt install python3-gi python3-gi-cairo gir1.2-gtk-3.0 \
     gir1.2-webkit2-4.1 gir1.2-appindicator3-0.1
 
 # Copy files
-mkdir -p ~/shack
-cp *.py *.html *.png *.svg ~/shack/
-cp shack.example.json ~/shack/shack.json
+mkdir -p ~/.local/share/shackdash
+cp *.py *.html *.png *.svg ~/.local/share/shackdash/
+cp shack.example.json ~/.local/share/shackdash/shack.json
 
 # Install server service
 cp shackdash-server.service ~/.config/systemd/user/
 systemctl --user enable --now shackdash-server.service
 
 # Solar data cron (every 3 hours)
-(crontab -l; echo "0 */3 * * * /usr/bin/python3 ~/shack/shackdash_fetch.py") | crontab -
+(crontab -l; echo "0 */3 * * * /usr/bin/python3 ~/.local/share/shackdash/shackdash_fetch.py") | crontab -
 ```
 
 ---
@@ -99,13 +101,13 @@ The uninstall script will:
 1. Stop and remove the systemd service
 2. Remove the cron job
 3. Remove the autostart entry
-4. Optionally remove `~/shack/` entirely, or just the ShackDash program files (keeping your `shack.json` config if you plan to reinstall)
+4. Optionally remove `~/.local/share/shackdash/` entirely, or just the ShackDash program files (keeping your `shack.json` config if you plan to reinstall)
 
 ---
 
 ## Configuration
 
-ShackDash stores your station config in `~/shack/shack.json`. You can edit this via:
+ShackDash stores your station config in `~/.local/share/shackdash/shack.json`. You can edit this via:
 - **Tray menu → Setup Wizard** (first run / full reconfiguration)
 - **Tray menu → Edit Shack Info** (quick edits)
 

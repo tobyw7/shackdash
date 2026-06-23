@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 ShackDash Local Server
-Serves ~/shack/ on localhost:7373 and proxies SOTA/POTA spot APIs.
+Serves ~/.local/share/shackdash/ on localhost:7373 and proxies SOTA/POTA spot APIs.
 """
 import http.server
 import socketserver
@@ -10,7 +10,7 @@ import urllib.request
 import json
 
 PORT = 7373
-DIRECTORY = os.path.expanduser("~/shack")
+DIRECTORY = os.path.expanduser("~/.local/share/shackdash")
 
 SOTA_URL = "https://api2.sota.org.uk/api/spots/10/all"
 POTA_URL = "https://api.pota.app/spot/activator"

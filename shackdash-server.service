@@ -3,7 +3,7 @@ Description=ShackDash Solar Data Server
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/python3 %h/shack/shackdash_server.py
+ExecStart=/usr/bin/python3 %h/.local/share/shackdash/shackdash_server.py
 Restart=always
 RestartSec=10
 
