@@ -21,8 +21,9 @@ FETCHER     = os.path.join(APP_DIR, 'shackdash_fetch.py')
 SHACK_JSON  = os.path.join(APP_DIR, 'shack.json')
 SHACK_DIR   = APP_DIR
 ICON        = os.path.join(APP_DIR, 'shackdash_icon.png')
+UNINSTALL   = os.path.join(APP_DIR, 'uninstall.sh')
 WIDTH       = 360
-APP_VERSION = '0.1.4'
+APP_VERSION = '0.1.5'
 ABOUT_LINK_URL = 'https://go.frantik.it/m8twy'  # placeholder - update with your YOURLS short link
 
 def _migrate_legacy_dir():
@@ -638,6 +639,9 @@ class ShackDashWidget:
         reset_item.connect('activate', self.on_reset)
         menu.append(reset_item)
 
+        uninstall_item = Gtk.MenuItem(label='Uninstall ShackDash…')
+        uninstall_item.connect('activate', self.on_uninstall)
+        menu.append(uninstall_item)
 
         self.aot_item = Gtk.MenuItem(label='✓ Always on Top')
         self.aot_item.connect('activate', self.on_toggle_always_on_top)
@@ -767,6 +771,37 @@ class ShackDashWidget:
             self.on_setup_wizard(None)
             # Resize again after wizard closes
             GLib.timeout_add(500, lambda: self.resize_to_content() or False)
+
+    def on_uninstall(self, _):
+        dlg = Gtk.MessageDialog(
+            transient_for=self.window,
+            modal=True,
+            message_type=Gtk.MessageType.WARNING,
+            buttons=Gtk.ButtonsType.NONE,
+            text='Uninstall ShackDash?'
+        )
+        dlg.format_secondary_text(
+            'This stops and removes the background service, cron job and '
+            'autostart entry.\n\nYou can keep your station config and solar '
+            'cache for a future reinstall, or remove everything.'
+        )
+        dlg.add_buttons(
+            'Cancel',            Gtk.ResponseType.CANCEL,
+            'Keep My Data',      Gtk.ResponseType.YES,
+            'Remove Everything', Gtk.ResponseType.OK,
+        )
+        dlg.set_default_response(Gtk.ResponseType.CANCEL)
+        response = dlg.run()
+        dlg.destroy()
+        if response not in (Gtk.ResponseType.YES, Gtk.ResponseType.OK):
+            return
+        data_flag = '--keep-data' if response == Gtk.ResponseType.YES else '--remove-data'
+        try:
+            subprocess.Popen(['bash', UNINSTALL, '--yes', data_flag])
+        except Exception as e:
+            print(f"Uninstall failed to launch: {e}")
+            return
+        self.on_quit(None)
 
     def on_about(self, _):
         dlg = Gtk.Dialog(title='About ShackDash', transient_for=self.window, modal=True)

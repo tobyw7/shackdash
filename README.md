@@ -90,12 +90,13 @@ systemctl --user enable --now shackdash-server.service
 
 ## Uninstallation
 
-To remove ShackDash from your system:
+The installer bundles `uninstall.sh` into `~/.local/share/shackdash/`, so you don't need the git repo around to remove ShackDash later. Either:
 
-```bash
-cd /path/to/shackdash
-bash uninstall.sh
-```
+- **Tray menu → Uninstall ShackDash…** — choose to keep or remove your station data, no terminal needed
+- Or run it directly:
+  ```bash
+  bash ~/.local/share/shackdash/uninstall.sh
+  ```
 
 The uninstall script will:
 1. Stop and remove the systemd service

@@ -73,6 +73,8 @@ cp shackdash_setup.py "$SHACK_DIR/"
 cp shackdash_widget.html "$SHACK_DIR/"
 cp shackdash_icon.png "$SHACK_DIR/"
 cp shackdash_icon.svg "$SHACK_DIR/"
+cp uninstall.sh "$SHACK_DIR/"
+chmod +x "$SHACK_DIR/uninstall.sh"
 
 # Preserve existing config if present
 if [ -f "$SHACK_DIR/shack.json" ]; then
@@ -121,3 +123,6 @@ echo "  python3 $SHACK_DIR/shackdash.py"
 echo ""
 echo "On first launch, the Setup Wizard will guide you"
 echo "through entering your callsign and location details."
+echo ""
+echo "To uninstall later, use the tray menu's 'Uninstall ShackDash…' or run:"
+echo "  bash $SHACK_DIR/uninstall.sh"
